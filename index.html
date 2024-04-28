@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Register</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="submit"] {
+            width: calc(100% - 22px); /* Adjusted width */
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input[type="submit"] {
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%; /* Make button full width */
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-center {
+            text-align: center; /* Align button center */
+        }
+    </style>
+</head>
+<body>
+
+<form id="authForm">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <input type="submit" value="Login" class="btn-center"> <!-- Added btn-center class -->
+    <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
+    <p><a href="#" onclick="showResetPassword()">Forgot password?</a></p>
+</form>
+
+<form id="registerForm" style="display: none;">
+    <h2>Register</h2>
+    <input type="text" id="regName" placeholder="Full Name" required>
+    <input type="email" id="regEmail" placeholder="Email" required>
+    <input type="password" id="regPassword" placeholder="Password" required>
+    <input type="submit" value="Register" id="registerButton" class="btn-center"> <!-- Added btn-center class -->
+    <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+</form>
+
+<form id="resetPasswordForm" style="display: none;">
+    <h2>Reset Password</h2>
+    <input type="email" id="resetEmail" placeholder="Email" required>
+    <input type="submit" value="Reset Password" class="btn-center"> <!-- Added btn-center class -->
+    <p><a href="#" onclick="showLogin()">Back to Login</a></p>
+</form>
+
+<script src="https://unpkg.com/aws-amplify@3.0.23/dist/aws-amplify.js"></script>
+<script>
+  Amplify.configure({
+    Auth: {
+      region: 'ap-south-1',
+      userPoolId: 'ap-south-1_Rcoih7uIo',
+      userPoolWebClientId: '7l9371nmbg91tpa5eoa40380km',
+    },
+  });
+</script>
+
+<script>
+    function showRegister() {
+        document.getElementById("authForm").style.display = "none";
+        document.getElementById("registerForm").style.display = "block";
+    }
+
+    function showLogin() {
+        document.getElementById("registerForm").style.display = "none";
+        document.getElementById("resetPasswordForm").style.display = "none";
+        document.getElementById("authForm").style.display = "block";
+    }
+
+    function showResetPassword() {
+        document.getElementById("authForm").style.display = "none";
+        document.getElementById("resetPasswordForm").style.display = "block";
+    }
+
+    document.getElementById("authForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        let email = document.getElementById("email").value;
+        let password = document.getElementById("password").value;
+        try {
+            const user = await Auth.signIn(email, password);
+            console.log("User signed in", user);
+            // Redirect to an authenticated page or perform further actions
+        } catch (error) {
+            console.error("Error signing in", error);
+            // Handle authentication error
+        }
+    });
+
+    document.getElementById("registerButton").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        let name = document.getElementById("regName").value;
+        let email = document.getElementById("regEmail").value;
+        let password = document.getElementById("regPassword").value;
+        try {
+            const user = await Auth.signUp({
+                username: email,
+                password: password,
+                attributes: {
+                    name: name,
+                    email: email
+                }
+            });
+            console.log("User signed up", user);
+            // Display success message or redirect to login page
+        } catch (error) {
+            console.error("Error signing up", error);
+            // Handle registration error
+        }
+    });
+
+    document.getElementById("resetPasswordForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        let email = document.getElementById("resetEmail").value;
+        try {
+            await Auth.forgotPassword(email);
+            console.log("Password reset initiated for", email);
+            // Display success message or redirect to login page
+        } catch (error) {
+            console.error("Error initiating password reset", error);
+            // Handle error
+        }
+    });
+</script>
+</body>
+</html>
